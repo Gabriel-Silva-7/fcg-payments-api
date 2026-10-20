@@ -36,14 +36,14 @@ public sealed class PaymentSimulatorTests
     [InlineData("42.51", PaymentSimulationStatus.Rejected, "AmountAboveLimit")]
     public void Custom_policy_decides_and_is_retained(string price, PaymentSimulationStatus status, string? reason)
     {
-        var options = new PaymentSimulationOptions { ApprovalLimit = 42.50m, Delay = TimeSpan.Zero };
+        var options = new PaymentSimulationOptions { ApprovalLimit = "42.50", Delay = TimeSpan.Zero };
         var result = PaymentSimulator.Evaluate(Request(Money(price)), options.CreatePolicy(), ProcessedAt);
-        options = options with { ApprovalLimit = 900m, Delay = TimeSpan.FromSeconds(9) };
+        options = options with { ApprovalLimit = "900", Delay = TimeSpan.FromSeconds(9) };
         Assert.Equal(status, result.Status);
         Assert.Equal(reason, result.Reason);
         Assert.Equal(42.50m, result.AppliedPolicy.ApprovalLimit);
         Assert.Equal(TimeSpan.Zero, result.AppliedPolicy.Delay);
-        Assert.Equal(900m, options.ApprovalLimit);
+        Assert.Equal("900", options.ApprovalLimit);
     }
 
     [Fact]

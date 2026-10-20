@@ -41,7 +41,7 @@ public sealed class PaymentSimulationOptionsTests
     {
         var limit = decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
         Assert.Throws<ArgumentOutOfRangeException>(() => new PaymentSimulationPolicy(limit));
-        var options = new PaymentSimulationOptions { ApprovalLimit = limit };
+        var options = new PaymentSimulationOptions { ApprovalLimit = value };
         Assert.Throws<ArgumentOutOfRangeException>(() => options.CreatePolicy());
         var validation = new PaymentSimulationOptionsValidator().Validate(null, options);
         Assert.True(validation.Failed);
@@ -54,7 +54,7 @@ public sealed class PaymentSimulationOptionsTests
     [InlineData("9999999999999999.99")]
     public void Representable_limits_are_valid(string value)
     {
-        var options = new PaymentSimulationOptions { ApprovalLimit = decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture) };
+        var options = new PaymentSimulationOptions { ApprovalLimit = value };
         Assert.True(new PaymentSimulationOptionsValidator().Validate(null, options).Succeeded);
         Assert.Equal(decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture), options.CreatePolicy().ApprovalLimit);
     }
@@ -91,7 +91,7 @@ public sealed class PaymentSimulationOptionsTests
     public void Validator_reports_both_invalid_keys()
     {
         var validation = new PaymentSimulationOptionsValidator().Validate(null,
-            new PaymentSimulationOptions { ApprovalLimit = -1m, Delay = TimeSpan.FromTicks(-1) });
+            new PaymentSimulationOptions { ApprovalLimit = "-1", Delay = TimeSpan.FromTicks(-1) });
         Assert.True(validation.Failed);
         Assert.Equal(2, validation.Failures.Count());
         Assert.Contains(validation.Failures, message => message.Contains("PaymentSimulation:ApprovalLimit", StringComparison.Ordinal));
