@@ -7,15 +7,21 @@ public static class PaymentSimulator
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(policy);
+        ValidateRequest(request);
+        RequireUtcMicroseconds(processedAtUtc, nameof(processedAtUtc));
+
+        return new PaymentSimulationDecision(request, policy, processedAtUtc);
+    }
+
+    internal static void ValidateRequest(PaymentSimulationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
         RequireIdentity(request.OrderId, nameof(request.OrderId));
         RequireIdentity(request.UserId, nameof(request.UserId));
         RequireIdentity(request.GameId, nameof(request.GameId));
         if (!PaymentSimulationValidation.IsAmount(request.Price))
             throw new ArgumentOutOfRangeException(nameof(request.Price), "Price must fit non-negative numeric(18,2) BRL without rounding.");
         RequireUtcMicroseconds(request.PlacedAtUtc, nameof(request.PlacedAtUtc));
-        RequireUtcMicroseconds(processedAtUtc, nameof(processedAtUtc));
-
-        return new PaymentSimulationDecision(request, policy, processedAtUtc);
     }
 
     private static void RequireIdentity(Guid value, string parameterName)
