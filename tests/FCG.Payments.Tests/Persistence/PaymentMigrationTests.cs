@@ -22,7 +22,7 @@ public sealed class PaymentMigrationTests(PostgresFixture database, ITestOutputH
         await context.Database.MigrateAsync();
         await context.Database.MigrateAsync();
         Assert.False(context.Database.HasPendingModelChanges());
-        Assert.Single(await context.Database.GetAppliedMigrationsAsync());
+        Assert.Contains("20261020133953_InitialPaymentDecisions", await context.Database.GetAppliedMigrationsAsync());
         await using var command = new NpgsqlCommand("SELECT to_regclass('public.payment_decisions')::text", connection);
         Assert.Equal("payment_decisions", await command.ExecuteScalarAsync());
     }
