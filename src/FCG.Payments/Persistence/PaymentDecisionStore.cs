@@ -75,14 +75,20 @@ public sealed class PaymentDecisionStore(PaymentsDbContext context)
         ConstraintName: "PK_payment_decisions"
     };
 
-    private static PaymentDecisionWriteResult ExistingResult(PersistedPaymentDecision existing, PaymentSimulationRequest request)
+    internal static IReadOnlyList<string> DifferingFields(PersistedPaymentDecision existing, PaymentSimulationRequest request)
     {
         List<string> different = [];
         if (existing.UserId != request.UserId) different.Add(nameof(request.UserId));
         if (existing.GameId != request.GameId) different.Add(nameof(request.GameId));
         if (existing.Price != request.Price) different.Add(nameof(request.Price));
         if (existing.PlacedAtUtc != request.PlacedAtUtc) different.Add(nameof(request.PlacedAtUtc));
-        if (different.Count != 0) throw new PaymentDecisionConflictException(request.OrderId, different.AsReadOnly());
+        return different.AsReadOnly();
+    }
+
+    private static PaymentDecisionWriteResult ExistingResult(PersistedPaymentDecision existing, PaymentSimulationRequest request)
+    {
+        var different = DifferingFields(existing, request);
+        if (different.Count != 0) throw new PaymentDecisionConflictException(request.OrderId, different);
         return new(existing, false);
     }
 }

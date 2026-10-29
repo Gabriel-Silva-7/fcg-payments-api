@@ -63,9 +63,46 @@ Não apagar decisão, inbox ou outbox para forçar reprocessamento.
 Falha transitória tem tentativa inicial mais1s/5s/15s; esgotamento e contrato
 inválido seguem para `_error` durável, sem resultado financeiro inventado. Após
 corrigir a causa, redrive controlado para a fila original reaplica validação e
-deduplicação normais. Replay operacional de conflitos será documentado na integração;
-não há endpoint HTTP público de recuperação. Broker indisponível conserva saída
+deduplicação normais. Conflitos de negócio podem ser inspecionados e reaplicados pela CLI local descrita
+abaixo; não há endpoint HTTP público de recuperação. Broker indisponível conserva saída
 confirmada; reentrega/retomada entrega o resultado sem novo pedido.
+
+## Recuperação de conflitos de negócio
+
+Execute no mesmo ambiente privado do serviço, com acesso ao banco próprio:
+
+```sh
+dotnet FCG.Payments.dll recover-orders list --limit 20
+dotnet FCG.Payments.dll recover-orders show --id <ConflictId>
+dotnet FCG.Payments.dll recover-orders replay --id <ConflictId> --dry-run
+dotnet FCG.Payments.dll recover-orders replay --id <ConflictId> --apply
+```
+
+O padrão de replay é prévia: transação RepeatableRead somente leitura, sem alterar
+contagens, decisões, conflitos, auditoria ou outbox. List/show expõem metadados e
+hash, sem payload ou credenciais. Leitura precisa somente da conexão PostgreSQL;
+apply usa também a configuração normal RabbitMQ e de simulação para preparar a
+saída no mesmo destino do serviço. Nenhum comando inicia HTTP, bus, dispatcher,
+migration ou seed. Configure explicitamente o mesmo destino AMQP do host normal.
+
+Replay exige uma decisão financeira já persistida e correspondente ao pedido
+armazenado no diagnóstico. Decisão ausente, payload/hash/tipo inválido, pedido
+divergente ou resultado incompatível permanecem em quarentena. O operador deve
+investigar e, se necessário, restaurar o estado autoritativo de backup sob o
+procedimento de manutenção do banco; não editar payload/hash, escolher outro
+resultado financeiro ou apagar deduplicação para forçar aceite.
+
+Quando o estado estiver consistente, apply chama o processamento original sob
+locks de conflito/pedido e preserva preço, status, política e instante da decisão.
+Um `Results` ausente pode ser reconstruído dessa decisão; nunca há nova simulação.
+Saída durável, resolução do conflito e `PaymentRecoveryAttempts` são atômicos.
+Repetir um conflito resolvido retorna `AlreadyResolved`, sem outra saída, e registra
+a tentativa. `StagedOriginalResult` significa commit na outbox; a entrega depende
+da retomada do host normal e do broker, sem promessa de entrega imediata.
+
+Códigos: 0 prévia elegível/aplicação/resolvido; 1 falha segura; 2 argumentos inválidos;
+3 diagnóstico inexistente; 4 quarentena. Transporte em `_error` usa redrive da fila
+original após corrigir sua causa, sem equivaler a replay de `MessageConflicts`.
 
 ## Saúde e privacidade
 

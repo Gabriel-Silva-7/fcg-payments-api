@@ -6,6 +6,7 @@ namespace FCG.Payments.Persistence;
 /// <summary>Caller-configured storage; BeginTransaction/UseTransaction permit atomic associated writes.</summary>
 public class PaymentsDbContext(DbContextOptions<PaymentsDbContext> options) : DbContext(options)
 {
+    public DbSet<PaymentRecoveryAttempt> PaymentRecoveryAttempts => Set<PaymentRecoveryAttempt>();
     public DbSet<PaymentResult> Results => Set<PaymentResult>();
     public DbSet<MessageConflict> MessageConflicts => Set<MessageConflict>();
     public DbSet<PersistedPaymentDecision> Decisions => Set<PersistedPaymentDecision>();
@@ -17,6 +18,15 @@ public class PaymentsDbContext(DbContextOptions<PaymentsDbContext> options) : Db
         modelBuilder.AddInboxStateEntity();
         modelBuilder.AddOutboxMessageEntity();
         modelBuilder.AddOutboxStateEntity();
+        modelBuilder.Entity<PaymentRecoveryAttempt>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.Outcome).HasMaxLength(40);
+            entity.Property(x => x.Reason).HasMaxLength(80);
+            entity.HasOne<MessageConflict>().WithMany().HasForeignKey(x => x.ConflictId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.ConflictId, x.AttemptedAtUtc });
+        });
         modelBuilder.Entity<PaymentResult>(entity =>
         {
             entity.HasKey(x => x.OrderId);

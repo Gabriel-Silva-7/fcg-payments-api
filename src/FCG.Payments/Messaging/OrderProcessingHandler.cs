@@ -37,8 +37,8 @@ public sealed class OrderProcessingHandler(PaymentsDbContext db, PaymentDecision
                 result = new PaymentResult { OrderId = incoming.OrderId, Payload = JsonSerializer.Serialize(recorded), CreatedAtUtc = now };
                 db.Results.Add(result);
             }
-            var original = JsonSerializer.Deserialize<PaymentProcessedEvent>(result.Payload)
-                ?? throw new InvalidOperationException("The persisted result is unavailable.");
+            var original = PaymentResultIntegrity.Read(decision, result)
+                ?? throw new InvalidOperationException("The persisted result is inconsistent with its payment decision.");
             await publication.Publish(original, publish => { publish.CorrelationId = incoming.OrderId; }, cancellationToken);
         }
         catch (PaymentDecisionConflictException)

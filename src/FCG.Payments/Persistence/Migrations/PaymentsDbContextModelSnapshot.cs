@@ -87,6 +87,33 @@ namespace FCG.Payments.Persistence.Migrations
                     b.ToTable("MessageConflicts");
                 });
 
+            modelBuilder.Entity("FCG.Payments.Persistence.PaymentRecoveryAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AttemptedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ConflictId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConflictId", "AttemptedAtUtc");
+
+                    b.ToTable("PaymentRecoveryAttempts");
+                });
+
             modelBuilder.Entity("FCG.Payments.Persistence.PaymentResult", b =>
                 {
                     b.Property<Guid>("OrderId")
@@ -338,6 +365,15 @@ namespace FCG.Payments.Persistence.Migrations
                     b.HasIndex("Created");
 
                     b.ToTable("OutboxState");
+                });
+
+            modelBuilder.Entity("FCG.Payments.Persistence.PaymentRecoveryAttempt", b =>
+                {
+                    b.HasOne("FCG.Payments.Persistence.MessageConflict", null)
+                        .WithMany()
+                        .HasForeignKey("ConflictId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FCG.Payments.Persistence.PaymentResult", b =>

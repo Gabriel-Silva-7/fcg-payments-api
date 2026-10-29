@@ -10,6 +10,7 @@ public sealed class PaymentsStorageHealthCheck(PaymentsDbContext db) : IHealthCh
     {
         try
         {
+            await db.PaymentRecoveryAttempts.AsNoTracking().Take(1).ToArrayAsync(cancellationToken);
             await db.Decisions.AsNoTracking().Take(1).ToArrayAsync(cancellationToken);
             await db.Results.AsNoTracking().Take(1).ToArrayAsync(cancellationToken);
             await db.MessageConflicts.AsNoTracking().Take(1).ToArrayAsync(cancellationToken);

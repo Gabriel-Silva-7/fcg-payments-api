@@ -8,6 +8,17 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
+if (args.FirstOrDefault() == "recover-orders")
+{
+    Environment.ExitCode = await FCG.Payments.Operations.PaymentRecoveryCommand.RunAsync(args[1..]);
+    return;
+}
+if (args.Length > 0 && !args[0].StartsWith('-'))
+{
+    Console.Error.WriteLine("Usage: recover-orders list | show --id GUID | replay --id GUID [--dry-run | --apply]");
+    Environment.ExitCode = 2;
+    return;
+}
 if (args is ["--healthcheck"])
 {
     Environment.ExitCode = await ContainerProbe.RunAsync(new Uri("http://127.0.0.1:8080/health/ready"));
@@ -28,6 +39,7 @@ builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddOptions<PaymentSimulationOptions>().Bind(builder.Configuration.GetSection(PaymentSimulationOptions.SectionName)).ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<PaymentSimulationOptions>, PaymentSimulationOptionsValidator>();
 builder.Services.AddPaymentsMessaging(builder.Configuration);
+builder.Services.AddScoped<FCG.Payments.Processing.PaymentRecoveryService>();
 if (!builder.Environment.IsDevelopment()) builder.Logging.AddFilter("MassTransit", LogLevel.None);
 builder.Services.AddHealthChecks().AddCheck<PaymentsStorageHealthCheck>("payments-storage", tags: ["ready"]);
 var app = builder.Build();
