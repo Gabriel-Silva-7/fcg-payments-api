@@ -13,6 +13,7 @@ acessível aos Testcontainers. Configure por ambiente ou provedor de segredos:
 | Variável | Comportamento |
 |---|---|
 | `ConnectionStrings__Default` | Banco exclusivo Payments, obrigatório |
+| `PGGSSENCMODE` | Perfil local: `disable`, passado ao Npgsql para autenticação por senha sem dependência Kerberos; não altera `SslMode` |
 | `RabbitMq__Host` / `RabbitMq__Port` | Host obrigatório, sem URL com credenciais; porta padrão5672 |
 | `RabbitMq__VirtualHost` | `/fcg`, obrigatório |
 | `RabbitMq__Username` / `RabbitMq__Password` | Credencial própria obrigatória, sem padrão |
@@ -136,6 +137,10 @@ Conexões precisam alcançar PostgreSQL/RabbitMQ pelo container. Testes usam ess
 serviços reais para persistência, concorrência, atomicidade, transporte/fan-out,
 reentrega com configuração alterada, falhas e destinos de erro. Provas de atomicidade
 suspendem somente o entregador bus outbox; provas de transporte mantêm o consumidor
-EF outbox real. Isso não comprova a jornada completa de compra, Compose ou Kubernetes.
+EF outbox real. Esses testes do serviço têm escopo próprio; a jornada dos quatro hosts em Compose e Kubernetes é verificada pela orquestração.
 
 [Manifestos Kubernetes próprios](k8s/README.md) para renderização e implantação pela orquestração.
+
+## Ambiente integrado
+
+A [orquestração](https://github.com/Gabriel-Silva-7/fcg-orchestration) prepara fontes limpas, credenciais locais, banco e broker; seus guias descrevem Compose, Kind, jornada real e recuperação. Use as revisões selecionadas da combinação, pois o README não certifica acesso público nem integração em `main`. Este repositório contém apenas o código e os dados de sua responsabilidade.
