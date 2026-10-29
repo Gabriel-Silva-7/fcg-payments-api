@@ -137,3 +137,5 @@ serviços reais para persistência, concorrência, atomicidade, transporte/fan-o
 reentrega com configuração alterada, falhas e destinos de erro. Provas de atomicidade
 suspendem somente o entregador bus outbox; provas de transporte mantêm o consumidor
 EF outbox real. Isso não comprova a jornada completa de compra, Compose ou Kubernetes.
+
+[Manifestos Kubernetes próprios](k8s/README.md) para renderização e implantação pela orquestração.
