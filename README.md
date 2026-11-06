@@ -114,7 +114,7 @@ original após corrigir sua causa, sem equivaler a replay de `MessageConflicts`.
 
 Pode iniciar com broker fora e retomar depois. Com migração habilitada, banco deve
 estar disponível antes da partida. Checks têm descrições fixas sem exceções.
-Fora de Development, logs brutos de MassTransit e eventos EF com exceção/stack
+Fora de Development, logs HTTP do framework (incluindo query strings), logs brutos de MassTransit e eventos EF com exceção/stack
 ficam suprimidos; conflitos registram somente IDs. Não habilitar logging sensível.
 Proteja banco, backups e filas de erro; não publicar seus dumps na demonstração.
 
@@ -143,7 +143,7 @@ EF outbox real. Esses testes do serviço têm escopo próprio; a jornada dos qua
 
 ## Ambiente integrado
 
-A [orquestração](https://github.com/Gabriel-Silva-7/fcg-orchestration) prepara fontes limpas, credenciais locais, banco e broker; seus guias descrevem Compose, Kind, jornada real e recuperação. Use as revisões selecionadas da combinação, pois o README não certifica acesso público nem integração em `main`. Este repositório contém apenas o código e os dados de sua responsabilidade.
+A [orquestração](https://github.com/Gabriel-Silva-7/fcg-orchestration) prepara fontes limpas, credenciais locais, banco e broker; seus guias descrevem Compose, Kind, jornada real e recuperação. Use os cinco SHAs registrados no ambiente para identificar a combinação executada. As URLs identificam as origens; disponibilidade remota dos commits e acesso externo exigem conferência separada. Este repositório contém apenas o código e os dados de sua responsabilidade.
 
 ## Limite de portabilidade
 

@@ -40,7 +40,12 @@ builder.Services.AddOptions<PaymentSimulationOptions>().Bind(builder.Configurati
 builder.Services.AddSingleton<IValidateOptions<PaymentSimulationOptions>, PaymentSimulationOptionsValidator>();
 builder.Services.AddPaymentsMessaging(builder.Configuration);
 builder.Services.AddScoped<FCG.Payments.Processing.PaymentRecoveryService>();
-if (!builder.Environment.IsDevelopment()) builder.Logging.AddFilter("MassTransit", LogLevel.None);
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddFilter("MassTransit", LogLevel.None);
+    // O framework inclui caminho/query brutos nos logs HTTP; podem conter dados sensíveis.
+    builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.None);
+}
 builder.Services.AddHealthChecks().AddCheck<PaymentsStorageHealthCheck>("payments-storage", tags: ["ready"]);
 var app = builder.Build();
 if (builder.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
