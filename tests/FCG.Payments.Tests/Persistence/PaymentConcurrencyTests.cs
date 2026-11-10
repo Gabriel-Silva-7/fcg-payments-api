@@ -35,7 +35,7 @@ public sealed class PaymentConcurrencyTests(PostgresFixture database)
             Assert.Same(retained, Assert.Single(context.Decisions.Local));
             Assert.Equal(EntityState.Unchanged, context.Entry(retained).State);
             // In the losing branch this SQL must execute AFTER real 23505/savepoint recovery.
-            await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO pay02_transaction_markers(id) VALUES ({Guid.NewGuid()})");
+            await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO payments_test_transaction_markers(id) VALUES ({Guid.NewGuid()})");
             if (transaction is not null) await transaction.CommitAsync();
             return (result, backend);
         }
@@ -111,28 +111,28 @@ public sealed class PaymentConcurrencyTests(PostgresFixture database)
         await using var context = database.Context();
         // An actual application-owned DB trigger provides a different constraint failure.
         await context.Database.ExecuteSqlRawAsync("""
-            CREATE FUNCTION pay02_reject_test_insert() RETURNS trigger LANGUAGE plpgsql AS $$
+            CREATE FUNCTION payments_test_reject_test_insert() RETURNS trigger LANGUAGE plpgsql AS $$
             BEGIN
                 IF NEW.policy_version = 'amount-limit-v1' THEN
-                    RAISE EXCEPTION 'test integrity failure' USING ERRCODE = '23514', CONSTRAINT = 'pay02_test_constraint', TABLE = 'payment_decisions', SCHEMA = 'public';
+                    RAISE EXCEPTION 'test integrity failure' USING ERRCODE = '23514', CONSTRAINT = 'payments_test_test_constraint', TABLE = 'payment_decisions', SCHEMA = 'public';
                 END IF;
                 RETURN NEW;
             END $$;
-            CREATE TRIGGER pay02_test_constraint BEFORE INSERT ON public.payment_decisions
-            FOR EACH ROW EXECUTE FUNCTION pay02_reject_test_insert();
+            CREATE TRIGGER payments_test_test_constraint BEFORE INSERT ON public.payment_decisions
+            FOR EACH ROW EXECUTE FUNCTION payments_test_reject_test_insert();
             """.Replace("23514", sqlState, StringComparison.Ordinal));
         try
         {
             var error = await Assert.ThrowsAsync<DbUpdateException>(() => new PaymentDecisionStore(context).GetOrCreateAsync(request, new(), ProcessedAt));
             var postgres = Assert.IsType<PostgresException>(error.InnerException);
             Assert.Equal(sqlState, postgres.SqlState);
-            Assert.Equal("pay02_test_constraint", postgres.ConstraintName);
+            Assert.Equal("payments_test_test_constraint", postgres.ConstraintName);
             await using var reader = database.Context();
             Assert.False(await reader.Decisions.AnyAsync(value => value.OrderId == request.OrderId));
         }
         finally
         {
-            await context.Database.ExecuteSqlRawAsync("DROP TRIGGER pay02_test_constraint ON public.payment_decisions; DROP FUNCTION pay02_reject_test_insert()");
+            await context.Database.ExecuteSqlRawAsync("DROP TRIGGER payments_test_test_constraint ON public.payment_decisions; DROP FUNCTION payments_test_reject_test_insert()");
         }
     }
 }

@@ -194,7 +194,7 @@ public sealed class PaymentDecisionTests(PostgresFixture database)
             await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
             var write = await new PaymentDecisionStore(context).GetOrCreateAsync(request, new(), ProcessedAt);
             Assert.True(write.Created);
-            await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO pay02_transaction_markers(id) VALUES ({marker})");
+            await context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO payments_test_transaction_markers(id) VALUES ({marker})");
             await using (var observer = database.Context())
                 Assert.False(await observer.Decisions.AnyAsync(value => value.OrderId == request.OrderId));
             if (commit) await transaction.CommitAsync();
@@ -203,7 +203,7 @@ public sealed class PaymentDecisionTests(PostgresFixture database)
         await using var reader = database.Context();
         Assert.Equal(commit, await reader.Decisions.AnyAsync(value => value.OrderId == request.OrderId));
         await using var connection = await database.OpenAsync();
-        await using var check = new NpgsqlCommand("SELECT count(*) FROM pay02_transaction_markers WHERE id = @id", connection);
+        await using var check = new NpgsqlCommand("SELECT count(*) FROM payments_test_transaction_markers WHERE id = @id", connection);
         check.Parameters.AddWithValue("id", marker);
         Assert.Equal(commit ? 1L : 0L, await check.ExecuteScalarAsync());
     }

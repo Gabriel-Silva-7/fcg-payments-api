@@ -19,17 +19,17 @@ public sealed class PostgresFixture : IAsyncLifetime
     private readonly string appPassword = Guid.NewGuid().ToString("N");
     private readonly IVolume volume;
     private readonly PostgreSqlContainer container;
-    public string ResourceName { get; } = "fcg-pay02-" + Guid.NewGuid().ToString("N");
+    public string ResourceName { get; } = "fcg-payments-test-" + Guid.NewGuid().ToString("N");
     public string ContainerId => container.Id;
     public string VolumeName => volume.Name;
 
     public PostgresFixture()
     {
-        volume = new VolumeBuilder().WithName(ResourceName + "-data").WithLabel("fcg.task", "F2-PAY-02").Build();
+        volume = new VolumeBuilder().WithName(ResourceName + "-data").WithLabel("fcg.test", "payments-persistence").Build();
         container = new PostgreSqlBuilder()
             .WithImage("postgres:16@sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94")
             .WithName(ResourceName)
-            .WithLabel("fcg.task", "F2-PAY-02")
+            .WithLabel("fcg.test", "payments-persistence")
             .WithVolumeMount(volume, "/var/lib/postgresql/data")
             .WithUsername("postgres")
             .WithPassword(Guid.NewGuid().ToString("N"))
@@ -64,7 +64,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         }
         await using var context = Context();
         await context.Database.MigrateAsync();
-        await context.Database.ExecuteSqlRawAsync("CREATE TABLE pay02_transaction_markers (id uuid PRIMARY KEY)");
+        await context.Database.ExecuteSqlRawAsync("CREATE TABLE payments_test_transaction_markers (id uuid PRIMARY KEY)");
     }
 
     public PaymentsDbContext Context() => new(new DbContextOptionsBuilder<PaymentsDbContext>()
