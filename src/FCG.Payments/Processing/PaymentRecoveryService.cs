@@ -56,7 +56,7 @@ public sealed class PaymentRecoveryService(PaymentsDbContext db, TimeProvider cl
                 outcome = Decide(message, decision, result);
                 if (outcome.Outcome == "ReadyToStage")
                 {
-                    // Tracker still has no pending writes when PAY02 validates its explicit transaction/savepoint contract.
+                    // Tracker still has no pending writes when the decision store validates its explicit transaction/savepoint contract.
                     await services.GetRequiredService<OrderProcessingHandler>().HandleAsync(message, conflict.TransportMessageId,
                         services.GetRequiredService<IPublishEndpoint>(), ct);
                     conflict.Resolved = true; conflict.ResolvedAtUtc = clock.GetUtcNow();

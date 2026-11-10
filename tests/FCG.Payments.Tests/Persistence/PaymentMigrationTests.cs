@@ -13,7 +13,7 @@ public sealed class PaymentMigrationTests(PostgresFixture database, ITestOutputH
     [Fact]
     public async Task Empty_database_has_payment_decision_schema_after_application_migrations()
     {
-        output.WriteLine($"PAY02 resource: container={database.ResourceName} id={database.ContainerId} volume={database.VolumeName}");
+        output.WriteLine($"Payment migration resource: container={database.ResourceName} id={database.ContainerId} volume={database.VolumeName}");
         await using var context = database.Context();
         await context.GetService<IMigrator>().MigrateAsync("0");
         await using var connection = await database.OpenAsync();
