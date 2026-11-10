@@ -1,12 +1,12 @@
 # FCG Payments
 
-Serviço .NET10 que consome `OrderPlacedEvent` pelo RabbitMQ, simula pagamento e
+Serviço .NET 10 que consome `OrderPlacedEvent` pelo RabbitMQ, simula pagamento e
 publica `PaymentProcessedEvent`. Mantém banco próprio e não consulta bancos de
 Users/Catalog/Notifications. Não executa cobrança real nem expõe pagamento HTTP.
 
 ## Executar e configurar
 
-Requer SDK **10.0.400**, PostgreSQL16 e RabbitMQ. O global.json desativa roll-forward;
+Requer SDK **10.0.400**, PostgreSQL 16 e RabbitMQ. O global.json desativa roll-forward;
 pacotes exatos e lockfiles protegem dependências. Para testes, Docker deve estar
 acessível aos Testcontainers. Configure por ambiente ou provedor de segredos:
 
@@ -14,13 +14,13 @@ acessível aos Testcontainers. Configure por ambiente ou provedor de segredos:
 |---|---|
 | `ConnectionStrings__Default` | Banco exclusivo Payments, obrigatório |
 | `PGGSSENCMODE` | Perfil local: `disable`, passado ao Npgsql para autenticação por senha sem dependência Kerberos; não altera `SslMode` |
-| `RabbitMq__Host` / `RabbitMq__Port` | Host obrigatório, sem URL com credenciais; porta padrão5672 |
+| `RabbitMq__Host` / `RabbitMq__Port` | Host obrigatório, sem URL com credenciais; porta padrão 5672 |
 | `RabbitMq__VirtualHost` | `/fcg`, obrigatório |
 | `RabbitMq__Username` / `RabbitMq__Password` | Credencial própria obrigatória, sem padrão |
 | `Queues__Orders` | Fila durável própria, padrão `fcg-payments-orders` |
 | `Database__MigrateOnStartup` | `true` aplica migrations antes de atender; padrão `false` |
 | `PaymentSimulation__ApprovalLimit` | BRL decimal invariante exato, padrão `500`; não negativo, cabe numeric(18,2) |
-| `PaymentSimulation__Delay` | TimeSpan entre00:00:00 e00:05:00; padrão00:00:02 |
+| `PaymentSimulation__Delay` | TimeSpan entre 00:00:00 e00:05:00; padrão 00:00:02 |
 
 Use role PostgreSQL sem superuser/criação de bancos/roles e usuário AMQP sem tag
 administrativa, limitado ao vhost. Migração exige criação dos objetos no banco
@@ -36,14 +36,14 @@ dotnet run --project src/FCG.Payments -c Release --no-build --no-launch-profile 
 
 ## Decisão, outbox e reentrega
 
-MassTransit8.5.11 recebe o contrato canônico em `FCG.Contracts`, com enums/status
+MassTransit 8.5.11 recebe o contrato canônico em `FCG.Contracts`, com enums/status
 nomeados, BRL exato e UTC com seis casas decimais. Price até o limite é Approved,
 sem Reason; acima é Rejected/AmountAboveLimit. Atraso é aplicado antes da primeira
 decisão. `payment_decisions` preserva pedido original, decisão, data e política
 aplicada. OrderId é único permanentemente.
 
 O consumer EF outbox é dono da transação ReadCommitted, com inbox e saída durável.
-A aplicação não abre transação aninhada. O armazenamento PAY02 participa dessa
+A aplicação não abre transação aninhada. O armazenamento de decisões participa dessa
 transação usando savepoints; lock transacional por OrderId serializa comparação,
 decisão, payload original em `Results` e stage do resultado. Falha antes do commit
 desfaz todos. Ack de sucesso depende do commit e da entrega protegida do middleware.
@@ -107,10 +107,10 @@ original após corrigir sua causa, sem equivaler a replay de `MessageConflicts`.
 
 ## Saúde e privacidade
 
-- `/health/live`: anônimo,200 Healthy, independente das dependências.
+- `/health/live`: anônimo, 200 Healthy, independente das dependências.
 - `/health/ready`: consulta schema próprio/outbox e bus + conexão AMQP real;
-  falha/degraded/unhealthy retorna503.
-- `dotnet FCG.Payments.dll --healthcheck`: probe HTTP local8080, timeout3s, código0/1.
+  falha/degraded/unhealthy retorna 503.
+- `dotnet FCG.Payments.dll --healthcheck`: probe HTTP local 8080, timeout 3s, código0/1.
 
 Pode iniciar com broker fora e retomar depois. Com migração habilitada, banco deve
 estar disponível antes da partida. Checks têm descrições fixas sem exceções.
@@ -120,7 +120,7 @@ Proteja banco, backups e filas de erro; não publicar seus dumps na demonstraç�
 
 ## Container e evidências
 
-Dockerfile multi-stage com SDK10.0.400/runtime10.0.11 fixados por digest, porta8080
+Dockerfile multi-stage com SDK 10.0.400/runtime 10.0.11 fixados por digest, porta 8080
 e usuário app/UID1654. Contexto inclui somente configuração de build e fontes.
 Passe variáveis de ambiente por arquivo externo, fora do contexto:
 

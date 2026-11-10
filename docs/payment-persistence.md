@@ -72,8 +72,8 @@ PostgreSQL; a integração com a outbox será feita pelo consumidor.
 A migration inicial fica em `Persistence/Migrations`. Uma instância configurada
 de `PaymentsDbContext` aplica `await context.Database.MigrateAsync(ct)` antes
 do uso. O factory de design existe para gerar migrations sem iniciar o host;
-comandos de atualização devem fornecer a conexão explicitamente. O host atual
-ainda não registra o banco nem aplica migrations no startup.
+comandos de atualização devem fornecer a conexão explicitamente. O host registra o
+`PaymentsDbContext` e aplica as migrations no startup quando `Database__MigrateOnStartup=true`.
 
 Com SDK 10.0.400 no diretório do projeto:
 
@@ -83,7 +83,7 @@ dotnet build -c Release --no-restore
 DOCKER_HOST=unix:///caminho/para/docker.sock dotnet test -c Release --no-restore
 ```
 
-Os testes usam PostgreSQL16 fixado por digest, container e volume exclusivos.
+Os testes usam PostgreSQL 16 fixado por digest, container e volume exclusivos.
 O superuser de bootstrap cria uma role real `fcg_payments` sem superuser,
 CREATEDB ou CREATEROLE. Essa role migra e usa o próprio banco e recebe acesso
 negado ao banco alheio. A fixture remove apenas seus recursos ao terminar.

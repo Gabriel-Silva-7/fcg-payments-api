@@ -4,7 +4,7 @@
 
 Com a política padrão, preços 0 e 500 resultam em `Approved` com `Reason = null`; 500.01 resulta em `Rejected` com `Reason = "AmountAboveLimit"`. A decisão conserva os dados do pedido, o instante fornecido e a política imutável aplicada. Dados inválidos falham com exceção de argumento antes de gerar decisão.
 
-`PaymentSimulationOptions` oferece estas chaves, para integração pelo futuro adaptador de processamento:
+`PaymentSimulationOptions` oferece estas chaves, usadas pelo processamento de pedidos:
 
 | Chave | Padrão | Valores válidos |
 |---|---|---|
@@ -13,9 +13,9 @@ Com a política padrão, preços 0 e 500 resultam em `Approved` com `Reason = nu
 
 `ApprovalLimit` é texto nas opções para preservar o valor bruto de `IConfiguration` antes de converter para decimal. O formato de configuração é invariante: dígitos ASCII, ponto decimal opcional com dígitos; sem sinal, espaços, vírgula, separador de milhares ou expoente. Zeros redundantes são aceitos (`500.000`), mas uma fração não nula além de centavos é recusada mesmo se tão pequena que `decimal` a arredondaria. A política e a regra continuam usando decimal. Exemplo programático: `new PaymentSimulationOptions { ApprovalLimit = "42.50", Delay = TimeSpan.Zero }.CreatePolicy()`.
 
-`CreatePolicy()` valida e produz um snapshot imutável. `PaymentSimulationOptionsValidator` implementa `IValidateOptions<PaymentSimulationOptions>` e informa todas as chaves inválidas; o adaptador deverá registrá-lo com `ValidateOnStart` para impedir inicialização com configuração inválida. Este host ainda não conecta essas opções. A regra retorna sincronicamente, sem esperar Delay; a espera será responsabilidade do adaptador. Use Delay zero em testes do processamento.
+`CreatePolicy()` valida e produz um snapshot imutável. `PaymentSimulationOptionsValidator` implementa `IValidateOptions<PaymentSimulationOptions>` e informa todas as chaves inválidas; o host o registra com `ValidateOnStart`, impedindo a inicialização com configuração inválida. A regra retorna sincronicamente, sem esperar Delay; a espera é feita pelo `OrderProcessingHandler` antes da decisão. Use Delay zero em testes do processamento.
 
-A simulação calcula em memória. Persistir a primeira decisão por OrderId, reaproveitar resultados em reentrega, consumir/publicar eventos e garantir transação são responsabilidades dos incrementos de persistência e transporte.
+A simulação calcula em memória. Persistir a primeira decisão por OrderId, reaproveitar resultados em reentrega, consumir/publicar eventos e garantir transação são responsabilidades da persistência (`payment_decisions`) e do transporte MassTransit, descritos no README e em [persistência](payment-persistence.md).
 
 ```sh
 dotnet test FCG.Payments.sln -c Release --no-restore --filter FullyQualifiedName~Simulation
