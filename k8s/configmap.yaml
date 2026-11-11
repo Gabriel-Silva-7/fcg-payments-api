@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${CONFIG_NAME}
+  namespace: ${NAMESPACE}
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  PGGSSENCMODE: ${GSS_MODE}
+  Database__MigrateOnStartup: "true"
+  RabbitMq__Host: rabbitmq
+  RabbitMq__Port: "5672"
+  RabbitMq__VirtualHost: /fcg
+  Queues__Orders: fcg-payments-orders
+  PaymentSimulation__ApprovalLimit: ${APPROVAL_LIMIT}
+  PaymentSimulation__Delay: ${PAYMENT_DELAY}
